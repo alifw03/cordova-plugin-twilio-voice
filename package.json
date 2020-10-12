@@ -1,0 +1,25 @@
+{
+  "name": "cordova-plugin-twilio-voice",
+  "version": "1.0.0",
+  "description": "This plugin uses twilio voice sdk.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alifw03/cordova-plugin-twilio-voice.git"
+  },
+  "keywords": [
+    "Twilio",
+    "Voice",
+    "Cordova",
+    "plugin"
+  ],
+  "author": "Hashtag Services",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/alifw03/cordova-plugin-twilio-voice/issues"
+  },
+  "homepage": "https://github.com/alifw03/cordova-plugin-twilio-voice#readme"
+}
