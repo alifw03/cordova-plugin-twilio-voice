@@ -2,23 +2,151 @@
 <plugin id="cordova-plugin-twilio-voice" version="1.0.0" xmlns="http://apache.org/cordova/ns/plugins/1.0" xmlns:android="http://schemas.android.com/apk/res/android">
   <name>TwilioVoice</name>
   <js-module name="TwilioVoice" src="www/TwilioVoice.js">
-    <clobbers target="TwilioVoice" />
+    <clobbers target="TwilioVoice.TwilioVoiceClient" />
   </js-module>
+
+  <engines>
+    <engine name="cordova" version=">=10.0.0"/>
+    <engine name="cordova-android" version=">=9.0.0"/>
+    <engine name="cordova-ios" version=">=6.1.0"/>
+</engines>
+
+  <!-- Necessary to set app name for incoming call notifications on Android and CallKit on iOS -->
+  <preference name="INCOMING_CALL_APP_NAME" default=""/>
+
+  <!-- Necessary to enable CallKit on iOS -->
+  <preference name="ENABLE_CALL_KIT" default="false"/>
+
+  <!-- Option to mask the incoming phone number for privacy -->
+  <preference name="MASK_INCOMING_PHONE_NUMBER" default="false"/>
+
   <platform name="android">
     <config-file parent="/*" target="res/xml/config.xml">
       <feature name="TwilioVoice">
         <param name="android-package" value="cordova.plugin.twilio.voice.TwilioVoice" />
       </feature>
     </config-file>
-    <config-file parent="/*" target="AndroidManifest.xml" />
+
+    <dependency id="phonegap-plugin-push"/>
+
+    <config-file parent="/*" target="AndroidManifest.xml">
+      <!-- [START fcm_listener] -->
+      <service
+          android:name="cordova.plugin.twilio.voice.fcm.VoiceFirebaseMessagingService">
+          <intent-filter>
+              <action android:name="com.google.firebase.MESSAGING_EVENT" />
+          </intent-filter>
+      </service>
+      <!-- [END fcm_listener] -->
+      <!-- [START instanceId_listener] -->
+      <service
+              android:name="cordova.plugin.twilio.voice.fcm.VoiceFirebaseInstanceIDService" >
+          <intent-filter>
+              <action android:name="com.google.firebase.INSTANCE_ID_EVENT" />
+          </intent-filter>
+      </service>
+      <!-- [END instanceId_listener] -->
+
+      <meta-data
+          android:name="com.google.android.gms.version"
+          android:value="@integer/google_play_services_version" />
+    </config-file>
+
+    <config-file target="res/xml/config.xml" parent="/widget">
+      <feature name="TwilioVoice">
+         <param name="android-package" value="cordova.plugin.twilio.voice.TwilioVoice"/>
+       </feature>
+   </config-file>
+
+   <config-file target="res/values/strings.xml" parent="/resources">
+       <string name="incoming_call_app_name" translatable="false">$INCOMING_CALL_APP_NAME</string>
+   </config-file>
+
+   <framework src="com.google.gms:google-services:3.0.0" />
+   <framework src="com.google.firebase:firebase-messaging:10.2.1" />
+   <framework src="com.twilio:voice-android:3.0.0"/>
+
     <source-file src="src/android/TwilioVoice.java" target-dir="src/cordova/plugin/twilio/voice/TwilioVoice" />
+    <source-file src="src/android/SoundPoolManager.java" target-dir="src/cordova/plugin/twilio/voice/TwilioVoice" />
+    <source-file src="src/android/fcm/VoiceFirebaseInstanceIDService.java" target-dir="src/cordova/plugin/twilio/voice/TwilioVoice/fcm" />
+    <source-file src="src/android/fcm/VoiceFirebaseMessagingService.java" target-dir="src/cordova/plugin/twilio/voice/TwilioVoice/fcm" />
+
+    <resource-file src="sounds/ringing.wav" target="res/raw/ringing.wav"/>
+    
   </platform>
   <platform name="ios">
-    <config-file parent="/*" target="config.xml">
+
+    <config-file parent="widget" target="config.xml">
       <feature name="TwilioVoice">
         <param name="ios-package" value="TwilioVoice" />
       </feature>
     </config-file>
+
+    <framework src="SystemConfiguration.framework" />
+    <framework src="AudioToolbox.framework" />
+    <framework src="AVFoundation.framework" />
+    <framework src="CoreTelephony.framework" />
+    <framework src="PushKit.framework" />
+    <framework src="CallKit.framework" />
+
+    <!-- Add support for background VOIP and audio to the plist -->
+    <config-file target="*-Info.plist" parent="UIBackgroundModes">
+      <array>
+          <string>voip</string>
+          <string>audio</string>
+      </array>
+  </config-file>
+
+    <!-- Add Privacy Description for Microphone Usage -->
+    <config-file target="*-Info.plist" parent="NSMicrophoneUsageDescription">
+      <string>The app uses the microphone for voice calls</string>
+    </config-file>
+
+    <!-- Add Incoming Call App Name for CallKit -->
+    <config-file target="*-Info.plist" parent="TVPIncomingCallAppName">
+      <string>$INCOMING_CALL_APP_NAME</string>
+    </config-file>
+
+    <!-- Add Enable CallKit Preference to plist -->
+    <config-file target="*-Info.plist" parent="TVPEnableCallKit">
+      <string>$ENABLE_CALL_KIT</string>
+    </config-file>
+
+    <!-- Add Mask Incoming Phone Number Preference to plist -->
+    <config-file target="*-Info.plist" parent="TVPMaskIncomingPhoneNumber">
+      <string>$MASK_INCOMING_PHONE_NUMBER</string>
+    </config-file>
+
+    <!-- Add Debug Twilio to plist -->
+    <config-file target="*-Info.plist" parent="TVPEnableDebugging">
+      <string>$DEBUG_TWILIO</string>
+    </config-file>
+
+    <!-- Add push entitlements -->
+    <config-file target="*-Debug.plist" parent="aps-environment">
+      <string>development</string>
+    </config-file>
+    <config-file target="*-Release.plist" parent="aps-environment">
+      <string>production</string>
+    </config-file>
+
+
+    <header-file src="src/ios/TwilioVoice.h" />
     <source-file src="src/ios/TwilioVoice.m" />
+
+    <resource-file src="sounds/ringing.wav" />
+    <resource-file src="sounds/traditionalring.mp3" />
+    <info>
+
+    </info>
+    <podspec>
+      <config>
+        <source url="https://github.com/CocoaPods/Specs.git"/>
+      </config>
+      <pods use-frameworks="true">
+        <pod name="TwilioVoice" spec="~> 5.5.1" />
+      </pods>
+    </podspec>
+
   </platform>
 </plugin>
